@@ -186,6 +186,10 @@ python app.py
 
 ---
 
+### 📥 **Tải Dataset**
+
+/ **(YOLOv8)** | [Tải](https://universe.roboflow.com/ai-pvebh/ai_yolo-2kz0o)/
+
 ## 🔧 Cấu Hình Model YOLO
 
 Model hiện tại sử dụng: **YOLOv8** fine-tuned trên dataset lớp học.
