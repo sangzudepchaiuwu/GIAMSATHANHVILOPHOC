@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Giám Sát Lớp Học</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            padding-top: 20px;
+        }
+
+        .button-group {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .stop-btn {
+            background-color: #dc3545;
+        }
+
+        .stop-btn:hover {
+            background-color: #c82333;
+        }
+
+        .start-cam-btn {
+            background-color: #17a2b8;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .workspace {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-container {
+            flex: 2;
+            display: none;
+            text-align: left;
+        }
+
+        .dashboard-container {
+            flex: 1;
+            display: none;
+            text-align: left;
+        }
+
+        /* Chỉnh sửa hiển thị camera */
+        .camera-settings {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .camera-settings input[type="text"] {
+            width: 95%;
+            padding: 8px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+        }
+
+        img#video_stream {
+            width: 100%;
+            border-radius: 5px;
+            background: #000;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            background-color: #007bff;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .badge-zero {
+            background-color: #6c757d;
+        }
+
+        #upload-section {
+            display: none;
+            width: 50%;
+            margin: 0 auto;
+        }
+
+        .upload-result {
+            max-width: 100%;
+            margin-top: 15px;
+        }
+
+        #video-upload-section {
+            display: none;
+            width: 50%;
+            margin: 0 auto;
+        }
+
+        .video-upload-result {
+            max-width: 100%;
+            margin-top: 15px;
+        }
+
+        .processing-indicator {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Hệ Thống Giám Sát Hành Vi Lớp Học</h1>
+
+    <div class="button-group">
+        <button onclick="showWebcamSection()">Sử dụng Camera</button>
+        <button onclick="showImageUpload()" style="background-color: #007BFF;">Tải Ảnh Lên</button>
+        <button onclick="showVideoUpload()" style="background-color: #FF9800;">Phân Tích Video</button>
+    </div>
+
+    <!-- Khu vực làm việc cho Live Cam & Dashboard -->
+    <div class="workspace">
+
+        <!-- Camera Section -->
+        <div id="webcam-section" class="box video-container">
+            <h3>Live Camera</h3>
+
+            <!-- Cài đặt Nguồn Camera -->
+            <div class="camera-settings">
+                <label>
+                    <input type="radio" name="cam_type" value="0" checked onchange="toggleIpInput()">
+                    Webcam Laptop/PC (Mặc định)
+                </label>
+                <br><br>
+                <label>
+                    <input type="radio" name="cam_type" value="ip" onchange="toggleIpInput()">
+                    Sử dụng IP Camera (Camera an ninh/Điện thoại)
+                </label>
+                <input type="text" id="ip_address"
+                    placeholder="Nhập luồng Video IP (VD: http://192.168.1.15:8080/video)">
+
+                <button class="start-cam-btn" onclick="startStream()">▶ Bắt đầu xem Camera</button>
+            </div>
+
+            <!-- Khung phát Video -->
+            <img id="video_stream" src="" alt="Webcam Feed">
+            <button class="stop-btn" onclick="stopWebcam()" id="stop_btn" style="display: none; width: 100%;">Tắt
+                Camera</button>
+        </div>
+
+        <!-- Dashboard Thống Kê -->
+        <div id="dashboard-section" class="box dashboard-container">
+            <h3>📊 Thống kê trực tiếp</h3>
+            <div id="stats-list">
+                <p>Đang chờ dữ liệu...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Khu vực Upload Ảnh -->
+    <div id="upload-section" class="box">
+        <h3>Kiểm tra qua hình ảnh</h3>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit" style="background-color: #007BFF;">Dự Đoán</button>
+        </form>
+
+        {% if result_image %}
+        <h4 style="margin-top: 20px;">Kết quả nhận diện:</h4>
+        <img class="upload-result" src="{{ url_for('static', filename='uploads/' + result_image) }}" alt="Result Image">
+        <script>
+            document.getElementById('upload-section').style.display = 'block';
+        </script>
+        {% endif %}
+    </div>
+
+    <!-- Khu vực Upload Video -->
+    <div id="video-upload-section" class="box">
+        <h3>Phân Tích Video Hành Vi Lớp Học</h3>
+        <form id="video-form">
+            <input type="file" id="video-file" accept="video/*" required>
+            <button type="button" onclick="uploadVideo()" style="background-color: #FF9800;">Phân Tích Video</button>
+        </form>
+
+        <div class="processing-indicator" id="processing-indicator">
+            <p>Đang xử lý video... Vui lòng chờ đợi</p>
+            <div class="spinner"></div>
+        </div>
+
+        <div id="video-result-section" style="display: none; margin-top: 20px;">
+            <h4>Video Đã Phân Tích:</h4>
+            <video class="video-upload-result" id="result-video" controls>
+                <source src="" type="video/mp4">
+                Trình duyệt không hỗ trợ video.
+            </video>
+            <div id="video-stats"
+                style="margin-top: 15px; text-align: left; background-color: #f0f0f0; padding: 15px; border-radius: 5px;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let statsInterval;
+
+        // 1. Hiển thị khu vực chọn Camera nhưng CHƯA chạy camera
+        function showWebcamSection() {
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('video-upload-section').style.display = 'none';
+            document.getElementById('webcam-section').style.display = 'block';
+            document.getElementById('dashboard-section').style.display = 'block';
+        }
+
+        // 2. Ẩn/Hiện ô nhập IP dựa trên loại camera được chọn
+        function toggleIpInput() {
+            let isIp = document.querySelector('input[name="cam_type"]:checked').value === 'ip';
+            document.getElementById('ip_address').style.display = isIp ? 'block' : 'none';
+        }
+
+        // 3. Bắt đầu truyền luồng video
+        function startStream() {
+            let camType = document.querySelector('input[name="cam_type"]:checked').value;
+            let source = '0';
+
+            if (camType === 'ip') {
+                source = document.getElementById('ip_address').value;
+                if (!source) {
+                    alert("Vui lòng nhập địa chỉ IP Camera!");
+                    return;
+                }
+            }
+
+            // Gắn src kèm theo tham số URL đã được mã hóa an toàn
+            let videoUrl = "{{ url_for('video_feed') }}?src=" + encodeURIComponent(source);
+            document.getElementById('video_stream').src = videoUrl;
+
+            // Hiển thị khung video và nút tắt
+            document.getElementById('video_stream').style.display = 'block';
+            document.getElementById('stop_btn').style.display = 'block';
+
+            // Bắt đầu cập nhật thống kê
+            if (statsInterval) clearInterval(statsInterval);
+            statsInterval = setInterval(fetchStats, 500);
+        }
+
+        // 4. Dừng truyền luồng
+        function stopWebcam() {
+            document.getElementById('video_stream').src = "";
+            document.getElementById('video_stream').style.display = 'none';
+            document.getElementById('stop_btn').style.display = 'none';
+
+            clearInterval(statsInterval);
+            document.getElementById('stats-list').innerHTML = "<p>Đã dừng luồng camera.</p>";
+        }
+
+        function showImageUpload() {
+            stopWebcam();
+            document.getElementById('webcam-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'none';
+            document.getElementById('upload-section').style.display = 'block';
+            document.getElementById('video-upload-section').style.display = 'none';
+        }
+
+        function showVideoUpload() {
+            stopWebcam();
+            document.getElementById('webcam-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'none';
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('video-upload-section').style.display = 'block';
+            document.getElementById('video-result-section').style.display = 'none';
+        }
+
+        function uploadVideo() {
+            const fileInput = document.getElementById('video-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Vui lòng chọn một tệp video!');
+                return;
+            }
+
+            if (file.size > 500 * 1024 * 1024) { // 500MB limit
+                alert('Kích thước video quá lớn (tối đa 500MB)');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', file);
+
+            document.getElementById('processing-indicator').style.display = 'block';
+            document.getElementById('video-result-section').style.display = 'none';
+
+            fetch('/analyze_video', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('processing-indicator').style.display = 'none';
+
+                    if (data.success) {
+                        // Use the dedicated video serving endpoint with proper MIME type
+                        document.getElementById('result-video').src = '/get_video/' + encodeURIComponent(data.output_video);
+
+                        let statsHtml = '<h5>Thống kê video:</h5>';
+                        for (const [behavior, count] of Object.entries(data.stats)) {
+                            statsHtml += `<div class="stat-item"><span>${behavior}</span><span class="badge">${count}</span></div>`;
+                        }
+                        document.getElementById('video-stats').innerHTML = statsHtml;
+                        document.getElementById('video-result-section').style.display = 'block';
+                    } else {
+                        alert('Lỗi: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('processing-indicator').style.display = 'none';
+                    console.error('Lỗi:', error);
+                    alert('Lỗi khi tải video lên');
+                });
+        }
+
+        function fetchStats() {
+            fetch('/stats')
+                .then(response => response.json())
+                .then(data => {
+                    let htmlContent = '';
+                    for (const [behavior, count] of Object.entries(data)) {
+                        let badgeClass = count > 0 ? 'badge' : 'badge badge-zero';
+                        htmlContent += `
+                            <div class="stat-item">
+                                <span>${behavior}</span>
+                                <span class="${badgeClass}">${count}</span>
+                            </div>
+                        `;
+                    }
+                    document.getElementById('stats-list').innerHTML = htmlContent;
+                })
+                .catch(error => console.error('Lỗi API:', error));
+        }
+    </script>
+</body>
+
+</html>
