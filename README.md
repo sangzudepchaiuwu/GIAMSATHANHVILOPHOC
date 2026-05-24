@@ -27,7 +27,6 @@ HỆ THỐNG GIÁM SÁT HÀNH VI LỚP HỌC</h1>
 
 Hệ thống tự động phát hiện các hành vi bất thường (ngủ gật, sử dụng điện thoại, v.v.) và gửi cảnh báo tức thì tới **Telegram Bot** để giáo viên hoặc quản lý lớp có thể xử lý kịp thời.
 
-<img src="https://via.placeholder.com/800x400?text=Classroom+Monitoring+Dashboard" alt="Dashboard" width="100%"/>
 
 ---
 
